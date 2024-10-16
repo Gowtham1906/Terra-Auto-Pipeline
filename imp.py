@@ -1,6 +1,6 @@
 import subprocess
 import hcl2
- 
+#test
 # Load variables from the terraform.tfvars file
 with open('terraform.tfvars', 'r') as f:
     variables = hcl2.load(f)
