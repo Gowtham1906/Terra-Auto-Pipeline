@@ -1,14 +1,14 @@
-variable "existing_vpc_id" {
-  description = "The ID of the existing VPC to import"
-  type        = string
+variable "vpc_configs" {
+  description = "Map of VPC configurations to create"
+  type = map(object({
+    cidr_block           = string
+    enable_dns_support   = bool
+    enable_dns_hostnames = bool
+    tags                 = map(string)
+  }))
 }
 
-variable "vpc_name" {
-  description = "The name of the new VPC to be created"
-  type        = string
-}
-
-variable "cidr_block" {
-  description = "CIDR block for the new VPC"
-  type        = string
+variable "existing_vpc_ids" {
+  description = "List of existing VPC IDs to import"
+  type        = list(string)
 }
