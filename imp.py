@@ -25,6 +25,14 @@ def vpc_exists_in_file(file_path, vpc_id):
         return vpc_id in content
     return False
 
+def resource_exists_in_file(file_path, resource_name):
+    """Check if a resource block with the given name exists in the file."""
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            content = f.read()
+        return resource_name in content
+    return False
+
 def append_to_tfvars(module_path, vpc_id, cidr_block, tags):
     """Append imported VPC configuration to terraform.tfvars."""
     tfvars_path = os.path.join(module_path, "terraform.tfvars")
@@ -66,7 +74,8 @@ imported_vpc_configs = {{
 def append_to_main_tf(module_path):
     """Append VPC resource configuration to main.tf."""
     main_tf_path = os.path.join(module_path, "main.tf")
-    
+    resource_name = 'resource "aws_vpc" "my_existing_vpc"'
+
     vpc_resource = """
 resource "aws_vpc" "my_existing_vpc" {
   for_each = var.imported_vpc_configs
@@ -78,7 +87,7 @@ resource "aws_vpc" "my_existing_vpc" {
 """
     
     # Check if main.tf already has the VPC resource configuration
-    if vpc_exists_in_file(main_tf_path, 'aws_vpc.my_existing_vpc'):
+    if resource_exists_in_file(main_tf_path, resource_name):
         print("VPC resource configuration already exists in main.tf. Skipping...")
         return
 
