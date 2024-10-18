@@ -8,6 +8,10 @@ variable "vpc_configs" {
   }))
 }
 
+variable "region" {
+  description = "Region"
+}
+
 variable "existing_vpc_ids" {
   description = "List of existing VPC IDs to import"
   type        = list(string)
