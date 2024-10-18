@@ -6,7 +6,7 @@ import boto3
 
 def fetch_vpc_details(vpc_id):
     """Fetch VPC details from AWS using the given VPC ID."""
-    ec2_client = boto3.client('ec2')
+    ec2_client = boto3.client('ec2', region_name='us-east-1')
     response = ec2_client.describe_vpcs(VpcIds=[vpc_id])
     
     if response['Vpcs']:
