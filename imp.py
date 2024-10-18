@@ -4,9 +4,10 @@ import os
 import json
 import boto3
 
-def fetch_vpc_details(vpc_id):
+def fetch_vpc_details(vpc_id, variables):
     """Fetch VPC details from AWS using the given VPC ID."""
-    ec2_client = boto3.client('ec2', region_name='us-east-1')
+    region = variables.get('region', '')  # Get region from variables
+    ec2_client = boto3.client('ec2', region_name=region)
     response = ec2_client.describe_vpcs(VpcIds=[vpc_id])
     
     if response['Vpcs']:
@@ -17,28 +18,13 @@ def fetch_vpc_details(vpc_id):
     else:
         raise Exception(f"VPC with ID {vpc_id} not found.")
 
-def vpc_exists_in_file(file_path, vpc_id):
-    """Check if the VPC ID already exists in the specified file."""
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            content = f.read()
-        return vpc_id in content
-    return False
-
-def resource_exists_in_file(file_path, resource_name):
-    """Check if a resource block with the given name exists in the file."""
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            content = f.read()
-        return resource_name in content
-    return False
-
 def append_to_tfvars(module_path, vpc_id, cidr_block, tags):
     """Append imported VPC configuration to terraform.tfvars."""
     tfvars_path = os.path.join(module_path, "terraform.tfvars")
 
     # Prepare new content
     new_content = f"""
+#Updated terraform.tfvars
 imported_vpc_configs = {{
   "{vpc_id}" = {{
     cidr_block           = "{cidr_block}"
@@ -48,11 +34,7 @@ imported_vpc_configs = {{
   }}
 }}
 """
-    # Check if terraform.tfvars already has the VPC ID
-    if vpc_exists_in_file(tfvars_path, vpc_id):
-        print(f"VPC {vpc_id} already exists in terraform.tfvars. Skipping...")
-        return
-
+    # Check if terraform.tfvars already has imported_vpc_configs
     if os.path.exists(tfvars_path):
         with open(tfvars_path, "r") as f:
             existing_content = f.read()
@@ -71,30 +53,33 @@ imported_vpc_configs = {{
 
     print(f"Appended imported VPC {vpc_id} configuration to terraform.tfvars.")
 
-def append_to_main_tf(module_path):
-    """Append VPC resource configuration to main.tf."""
+def update_main_tf(module_path):
+    """Update main.tf with a single VPC resource using for_each."""
     main_tf_path = os.path.join(module_path, "main.tf")
-    resource_name = 'resource "aws_vpc" "my_existing_vpc"'
-
+    
     vpc_resource = """
+#Updated main.tf
 resource "aws_vpc" "my_existing_vpc" {
-  for_each = var.imported_vpc_configs
-  cidr_block = each.value.cidr_block
-  enable_dns_support = each.value.enable_dns_support
-  enable_dns_hostnames = each.value.enable_dns_hostnames
-  tags = each.value.tags
+  for_each              = var.imported_vpc_configs
+  cidr_block            = each.value.cidr_block
+  enable_dns_support    = each.value.enable_dns_support
+  enable_dns_hostnames  = each.value.enable_dns_hostnames
+  tags                  = each.value.tags
 }
 """
-    
-    # Check if main.tf already has the VPC resource configuration
-    if resource_exists_in_file(main_tf_path, resource_name):
-        print("VPC resource configuration already exists in main.tf. Skipping...")
-        return
 
+    # Check if main.tf already has the VPC resource configuration
     if os.path.exists(main_tf_path):
-        with open(main_tf_path, "a") as f:
-            f.write(vpc_resource)
-        print("Appended VPC resource configuration to main.tf.")
+        with open(main_tf_path, "r") as f:
+            existing_content = f.read()
+        
+        if "my_existing_vpc" not in existing_content:
+            # Append the new VPC resource to main.tf
+            with open(main_tf_path, "a") as f:
+                f.write(vpc_resource)
+            print("Appended VPC resource to main.tf.")
+        else:
+            print("VPC resource already exists in main.tf.")
     else:
         with open(main_tf_path, "w") as f:
             f.write(vpc_resource)
@@ -105,6 +90,7 @@ def update_variables_tf(module_path):
     variables_tf_path = os.path.join(module_path, "variables.tf")
     
     new_variable = """
+#Updated variables.tf
 variable "imported_vpc_configs" {
   description = "Imported VPC configurations"
   type = map(object({
@@ -118,14 +104,22 @@ variable "imported_vpc_configs" {
 """
     
     # Check if the variable already exists in the file
-    if vpc_exists_in_file(variables_tf_path, 'variable "imported_vpc_configs"'):
-        print("imported_vpc_configs variable already exists in variables.tf. Skipping...")
+    if not os.path.exists(variables_tf_path):
+        with open(variables_tf_path, "w") as f:
+            f.write(new_variable)
+        print("Created variables.tf and added imported_vpc_configs variable.")
         return
 
-    # Append the new variable to variables.tf
-    with open(variables_tf_path, "a") as f:
-        f.write(new_variable)
-    print("Appended imported_vpc_configs variable to variables.tf")
+    with open(variables_tf_path, "r") as f:
+        existing_content = f.read()
+    
+    if "variable \"imported_vpc_configs\"" not in existing_content:
+        # Append the new variable to variables.tf
+        with open(variables_tf_path, "a") as f:
+            f.write(new_variable)
+        print("Appended imported_vpc_configs variable to variables.tf")
+    else:
+        print("imported_vpc_configs variable already exists in variables.tf")
 
 def main(module_path):
     """Main function to run the script."""
@@ -147,19 +141,26 @@ def main(module_path):
 
     for existing_id in existing_vpc_ids:
         try:
-            cidr_block, tags = fetch_vpc_details(existing_id)
+            cidr_block, tags = fetch_vpc_details(existing_id, variables)  # Pass variables here
         except Exception as e:
             print(f"Error fetching VPC details for {existing_id}: {e}")
             continue
 
+        # Check if the VPC details already exist in terraform.tfvars
+        with open(tfvars_path, 'r') as f:
+            tfvars_content = f.read()
+        if f'"{existing_id}" =' in tfvars_content:
+            print(f"VPC {existing_id} has already been imported. Skipping update.")
+            continue
+
         append_to_tfvars(module_path, existing_id, cidr_block, tags)
 
-    append_to_main_tf(module_path)
+    update_main_tf(module_path)
     update_variables_tf(module_path)
 
     # Initialize Terraform
     try:
-        print("Initializing Terraform...")
+        print("Initializing Terraform...")        
         subprocess.run(['terraform', 'init'], check=True)
     except subprocess.CalledProcessError as e:
         print("Error during Terraform initialization:")
@@ -168,9 +169,6 @@ def main(module_path):
 
     # Import each VPC
     for existing_id in existing_vpc_ids:
-        if vpc_exists_in_file(os.path.join(module_path, 'main.tf'), existing_id):
-            print(f"VPC {existing_id} already imported. Skipping...")
-            continue
         import_command = ['terraform', 'import', f'aws_vpc.my_existing_vpc["{existing_id}"]', existing_id]
         try:
             print(f"Importing VPC with ID: {existing_id}...")
