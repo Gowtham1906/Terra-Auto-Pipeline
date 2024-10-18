@@ -11,29 +11,9 @@ vpc_configs = {
     enable_dns_support   = true
     enable_dns_hostnames = true
     tags = {
-      Name        = "vpc_new"
+      Name        = "vpc_new_1"
       Environment = "production"
     }
   }
 }
 
-imported_vpc_configs = {
-  "vpc-01b03447d299d032d" = {
-    cidr_block = "10.0.0.0/16",
-    enable_dns_support = true,
-    enable_dns_hostnames = true,
-    tags = {
-    "Name": "Terra-Auto",
-    "Environment": "production"
-}
-  }
-
-  "vpc-0ac3883de5bde45b6" = {
-    cidr_block           = "172.31.0.0/16"
-    enable_dns_support   = true
-    enable_dns_hostnames = true
-    tags = {
-    "Name": "Default_VPC"
-}
-  }
-}
