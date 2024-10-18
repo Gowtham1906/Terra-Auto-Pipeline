@@ -11,10 +11,10 @@ resource "aws_vpc" "my_vpc" {
   tags                 = each.value.tags
 }
 
-# terraform {
-#   backend "s3" {
-#     bucket = "my-infra-bucket-161024"
-#     key    = "terraform/statefile.tfstate"
-#     region = "us-east-1" 
-#   }
-# }
+terraform {
+   backend "s3" {
+     bucket = "my-infra-bucket-161024"
+     key    = "terraform/statefile.tfstate"
+     region = "us-east-1" 
+   }
+ }
