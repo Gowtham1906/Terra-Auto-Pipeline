@@ -1,6 +1,6 @@
 existing_vpc_ids = [
   "vpc-0ac3883de5bde45b6", 
-  "vpc-019ba7761ee664834"
+  "vpc-01b03447d299d032d"
 ]
 
 region = "us-east-1"
