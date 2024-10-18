@@ -3,6 +3,8 @@ existing_vpc_ids = [
   "vpc-019ba7761ee664834"
 ]
 
+region = "us-east-1"
+
 vpc_configs = {
   "vpc" = {
     cidr_block           = "10.0.0.0/16"
