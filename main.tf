@@ -1,5 +1,5 @@
 resource "aws_vpc" "my_vpc" {
-  for_each = var.vpc_configs
+  for_each = var.vpc_configs 
   
   cidr_block           = each.value.cidr_block
   enable_dns_support   = each.value.enable_dns_support
