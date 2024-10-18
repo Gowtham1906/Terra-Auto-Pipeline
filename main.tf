@@ -1,3 +1,7 @@
+provider "aws" {
+  region  = "us-east-1"
+}
+
 resource "aws_vpc" "my_vpc" {
   for_each = var.vpc_configs 
   
