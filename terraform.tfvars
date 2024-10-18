@@ -21,6 +21,16 @@ vpc_configs = {
 
 #Updated terraform.tfvars
 imported_vpc_configs = {
+  "vpc-02823117db1803700" = {
+    cidr_block = "10.0.0.0/16",
+    enable_dns_support = true,
+    enable_dns_hostnames = true,
+    tags = {
+    "Environment": "production",
+    "Name": "vpc_new_terra_1"
+}
+  }
+
   "vpc-0e355779798e35020" = {
     cidr_block = "10.0.0.0/16",
     enable_dns_support = true,
