@@ -3,6 +3,7 @@ existing_vpc_ids = [
   "vpc-0e355779798e35020"
 ]
 
+
 region = "us-east-1"
 
 vpc_configs = {
