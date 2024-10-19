@@ -1,6 +1,6 @@
 existing_vpc_ids = [
-  "vpc-02823117db1803700", 
-  "vpc-0e355779798e35020"
+  "vpc-01483b6fe6b00af73", 
+  "vpc-07bd81c8b6c7c9b6d"
 ]
 
 
